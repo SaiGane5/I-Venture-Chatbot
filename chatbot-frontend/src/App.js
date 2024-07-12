@@ -231,12 +231,12 @@ const App = () => {
     }
   };
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    if (username.trim() === '') {
-      setError('Username cannot be empty');
-      return;
-    }
+  // const handleRegister = async (e) => {
+  //   e.preventDefault();
+  //   if (username.trim() === '') {
+  //     setError('Username cannot be empty');
+  //     return;
+  //   }
 
     const usernameExists = await checkUsernameExists(username);
     if (usernameExists) {
