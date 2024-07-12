@@ -7,7 +7,7 @@ import { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command } fr
 import { fromEnv } from '@aws-sdk/credential-provider-env';
 import { debounce } from 'lodash';
 import './App.css';
-import env from "dotenv";
+import 'dotenv/config'
 
 // Configure AWS SDK v3
 const s3Client = new S3Client({
