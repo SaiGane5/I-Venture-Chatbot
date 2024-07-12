@@ -7,14 +7,14 @@ import { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command } fr
 import { fromEnv } from '@aws-sdk/credential-provider-env';
 import { debounce } from 'lodash';
 import './App.css';
-import 'dotenv/config'
+import env from "react-dotenv";
 
 // Configure AWS SDK v3
 const s3Client = new S3Client({
   region: 'us-east-1',
-  credentials:{
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  credentials: {
+    accessKeyId: env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
   }
 });
 
@@ -106,7 +106,7 @@ const App = () => {
     setLoading(false);
     setMessage('');
   };
-  
+
   const handleFeedbackChange = (index, feedback) => {
     const updatedMessages = [...messages];
     updatedMessages[index].feedback = feedback;
@@ -117,7 +117,7 @@ const App = () => {
     const updatedMessages = [...messages];
     updatedMessages[index].rating = rating;
     setMessages(updatedMessages);
-  
+
     // Save to CSV after rating change
     // await saveToCSV();
   };
@@ -127,7 +127,7 @@ const App = () => {
       // Fetch existing data from S3
       const existingData = await downloadFromS3();
       const data = existingData ? Papa.parse(existingData, { header: true }).data : [];
-  
+
       // Append new data
       for (let i = 0; i < messages.length; i++) {
         if (messages[i].role === 'user' && messages[i + 1] && messages[i + 1].role === 'assistant') {
@@ -140,11 +140,11 @@ const App = () => {
           i++; // Skip the next message as it's already paired
         }
       }
-  
+
       const csv = Papa.unparse(data);
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
       const file = new File([blob], 'chat_data.csv');
-  
+
       await uploadToS3(file);
     } catch (error) {
       console.error('Error saving to CSV:', error);
@@ -158,7 +158,7 @@ const App = () => {
         Key: `react_app_ibot/${username}/chat_data.csv`,
       });
       const { Body } = await s3Client.send(command);
-  
+
       if (Body instanceof ReadableStream) {
         return await streamToString(Body);
       } else if (Body instanceof Blob) {
@@ -175,7 +175,7 @@ const App = () => {
       throw err;
     }
   };
-  
+
   const streamToString = (stream) => {
     return new Promise((resolve, reject) => {
       const reader = stream.getReader();
@@ -191,7 +191,7 @@ const App = () => {
       pump();
     });
   };
-  
+
   const blobToString = (blob) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -200,7 +200,7 @@ const App = () => {
       reader.readAsText(blob);
     });
   };
-  
+
   const uploadToS3 = async (file) => {
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-'); // Generate a timestamp
     const params = {
@@ -209,7 +209,7 @@ const App = () => {
       Body: file,
       ContentType: 'text/csv',
     };
-  
+
     const command = new PutObjectCommand(params);
     try {
       await s3Client.send(command);
@@ -232,33 +232,33 @@ const App = () => {
       return false;
     }
   };
-  
+
   const handleRegister = async (e) => {
     e.preventDefault();
     if (username.trim() === '') {
       setError('Username cannot be empty');
       return;
     }
-  
+
     const usernameExists = await checkUsernameExists(username);
     if (usernameExists) {
       setError('Username already exists. Please choose another.');
       return;
     }
-  
+
     // Create a new folder for the username in S3
     await createUsernameFolder(username);
     setIsUsernameSubmitted(true);
     setError('');
   };
-  
+
   const createUsernameFolder = async (username) => {
     const params = {
       Bucket: 'aiex',
       Key: `react_app_ibot/${username}/`,
       Body: '',
     };
-  
+
     const command = new PutObjectCommand(params);
     try {
       await s3Client.send(command);
@@ -272,32 +272,32 @@ const App = () => {
     <div className="app">
       {!isUsernameSubmitted ? (
         <div className="login-container">
-         <div className='landing-page'>
-          <h1>I-Venture @ ISB: Gen AI Bot</h1>
-          <h2>Instructions:</h2>
-          <ul>
-            <li>Registration:</li>
-            <ol>
-            <li>Enter your username</li>
-            <li>Click register, if you have not created a username earlier</li>
-            </ol>
-            <li>Logging In:</li>
-            <ol>
-            <li>Click login, if you have created a username before</li>
-            <li>Enter username and click login</li>
-            </ol>
-            <li>After logging in, you are ready to ask questions about I-Venture</li>
-            <li>
-              You can get two different responses
+          <div className='landing-page'>
+            <h1>I-Venture @ ISB: Gen AI Bot</h1>
+            <h2>Instructions:</h2>
+            <ul>
+              <li>Registration:</li>
               <ol>
-                <li>RAG ANSWER: These answers are generated using the true data gathered from I-Venture @ ISB</li>
-                <li>WEB ANSWER: These answers are generated using web search</li>
+                <li>Enter your username</li>
+                <li>Click register, if you have not created a username earlier</li>
               </ol>
-            </li>
-            <li>Rate the answers and give feedback by pressing SHARE DATA button, this will help us a lot to improve our model</li>
-          </ul>
-          <footer>Powered by <a href="https://ai-guru-kul.vercel.app"  target="blank">AIGurukul</a></footer>
-        </div>
+              <li>Logging In:</li>
+              <ol>
+                <li>Click login, if you have created a username before</li>
+                <li>Enter username and click login</li>
+              </ol>
+              <li>After logging in, you are ready to ask questions about I-Venture</li>
+              <li>
+                You can get two different responses
+                <ol>
+                  <li>RAG ANSWER: These answers are generated using the true data gathered from I-Venture @ ISB</li>
+                  <li>WEB ANSWER: These answers are generated using web search</li>
+                </ol>
+              </li>
+              <li>Rate the answers and give feedback by pressing SHARE DATA button, this will help us a lot to improve our model</li>
+            </ul>
+            <footer>Powered by <a href="https://ai-guru-kul.vercel.app" target="blank">AIGurukul</a></footer>
+          </div>
           {!isLoggingIn ? (
             <form onSubmit={handleUsernameSubmit} className="username-form">
               <input
@@ -327,53 +327,53 @@ const App = () => {
           )}
         </div>
       ) : (
-         <div className="chat-container">
+        <div className="chat-container">
           <header>The Gen AI bot: Know about I-Venture@ISB</header>
-        <div className="messages">
-          {messages.map((msg, index) => (
-            <div key={index} className={`message ${msg.role}`}>
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
-              {msg.role === 'assistant' && (
-                <div className="rating-container">
-                  <label>Rate this response:</label>
-                  <input
-                    type="range"
-                    min="1"
-                    max="5"
-                    value={msg.rating}
-                    onChange={(e) => handleRatingChange(index, e.target.value)}
-                    className="rating-slider"
-                    style={{ '--slider-value': `${(msg.rating - 1) * 25}%` }} // Assuming rating is between 1 and 5
-                  />
-                  <span>{msg.rating}</span>
-                  <input
-                    type="text"
-                    value={msg.feedback}
-                    onChange={(e) => handleFeedbackChange(index, e.target.value)}
-                    placeholder="Enter your feedback"
-                    className="feedback-input"
-                  />
-                </div>
-              )}
-            </div>
-          ))}
-          {loading && <div className="message thinking">Thinking...</div>}
-          <div ref={messagesEndRef} />
+          <div className="messages">
+            {messages.map((msg, index) => (
+              <div key={index} className={`message ${msg.role}`}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                {msg.role === 'assistant' && (
+                  <div className="rating-container">
+                    <label>Rate this response:</label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="5"
+                      value={msg.rating}
+                      onChange={(e) => handleRatingChange(index, e.target.value)}
+                      className="rating-slider"
+                      style={{ '--slider-value': `${(msg.rating - 1) * 25}%` }} // Assuming rating is between 1 and 5
+                    />
+                    <span>{msg.rating}</span>
+                    <input
+                      type="text"
+                      value={msg.feedback}
+                      onChange={(e) => handleFeedbackChange(index, e.target.value)}
+                      placeholder="Enter your feedback"
+                      className="feedback-input"
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+            {loading && <div className="message thinking">Thinking...</div>}
+            <div ref={messagesEndRef} />
+          </div>
+          <form onSubmit={handleSubmit} className="message-form">
+            <input
+              type="text"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder="Type your message here..."
+              className="message-input"
+              disabled={loading}
+            />
+            <button type="submit" className="send-button" disabled={loading}>Send</button>
+          </form>
+          <button onClick={handleEndSession} className="end-session-button">SHARE DATA</button>
+          <footer>Powered by <a href="https://ai-guru-kul.vercel.app" target="blank"> AIGuruKul</a></footer>
         </div>
-        <form onSubmit={handleSubmit} className="message-form">
-          <input
-            type="text"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            placeholder="Type your message here..."
-            className="message-input"
-            disabled={loading}
-          />
-          <button type="submit" className="send-button" disabled={loading}>Send</button>
-        </form>
-        <button onClick={handleEndSession} className="end-session-button">SHARE DATA</button>
-        <footer>Powered by <a href="https://ai-guru-kul.vercel.app"  target="blank"> AIGuruKul</a></footer>
-      </div>
       )}
     </div>
   );
