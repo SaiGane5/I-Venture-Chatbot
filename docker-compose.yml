@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./chatbot-backend
+    ports:
+      - "8000:8000"
+    environment:
+      PORT: 8000
+
+  frontend:
+    build:
+      context: ./chatbot-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
