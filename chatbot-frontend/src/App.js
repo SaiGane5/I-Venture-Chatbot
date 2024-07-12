@@ -4,8 +4,6 @@ import remarkGfm from 'remark-gfm';
 import axios from 'axios';
 import Papa from 'papaparse';
 import { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
-import { fromEnv } from '@aws-sdk/credential-provider-env';
-import { debounce } from 'lodash';
 import './App.css';
 import env from "react-dotenv";
 
@@ -13,9 +11,9 @@ import env from "react-dotenv";
 const s3Client = new S3Client({
   region: 'us-east-1',
   credentials: {
-    accessKeyId: env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
-  }
+    accessKeyId: env.AWS_ACCESS_ID,
+    secretAccessKey: env.AWS_SECRET_KEY
+  },
 });
 
 const App = () => {
