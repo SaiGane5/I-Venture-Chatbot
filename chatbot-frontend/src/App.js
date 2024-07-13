@@ -5,14 +5,14 @@ import axios from 'axios';
 import Papa from 'papaparse';
 import { S3Client, GetObjectCommand, PutObjectCommand, ListObjectsV2Command } from '@aws-sdk/client-s3';
 import './App.css';
-import env from "react-dotenv";
+// import env from "react-dotenv";
 
 // Configure AWS SDK v3
 const s3Client = new S3Client({
   region: 'us-east-1',
   credentials: {
-    accessKeyId: env.AWS_ACCESS_ID,
-    secretAccessKey: env.AWS_SECRET_KEY
+    accessKeyId: "",
+    secretAccessKey: ""
   },
 });
 
@@ -231,12 +231,12 @@ const App = () => {
     }
   };
 
-  // const handleRegister = async (e) => {
-  //   e.preventDefault();
-  //   if (username.trim() === '') {
-  //     setError('Username cannot be empty');
-  //     return;
-  //   }
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    if (username.trim() === '') {
+      setError('Username cannot be empty');
+      return;
+    }
 
     const usernameExists = await checkUsernameExists(username);
     if (usernameExists) {
